@@ -22,6 +22,10 @@ public class MeshDisplayInfo : MonoBehaviour
     [SerializeField] bool m_DisplayVertices;
     [SerializeField] int m_NMaxVertices;
 
+    [Header("faces")]
+    [SerializeField] bool m_DisplayFaces;
+    [SerializeField] int m_NMaxFaces;
+
 
 
     // Start is called before the first frame update
@@ -35,7 +39,6 @@ public class MeshDisplayInfo : MonoBehaviour
         if (! (m_Mf && !m_Mf.sharedMesh)) return;
 
         Vector3[] vertices = m_Mf.sharedMesh.vertices;
-
 
         //edges
         if (m_DisplayEdges)
@@ -98,9 +101,50 @@ public class MeshDisplayInfo : MonoBehaviour
                 
             }
         }
+    }
+
+    public static string ExportMeshCSV(Mesh mesh)
+    {
+        List<string> strings = new List<string>();
+        strings.Add("VertexIndex\tVertexPositionX\tVertexPositionY\tVertexPositionZ\tQuadIndex\tQuadVertex1\tQuadVertex2\tQuadVertex3\tQuadVertex4");
+        
+        Vector3[] vertices = mesh.vertices;
+        int[] quads = mesh.GetIndices(0);
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            Vertex pos = new Vertex(vertices[i]);
+            strings.Add($"{i}\t{pos.vertex.x:N02}\t{pos.vertex.y:N02}\t{pos.vertex.z:N02}\t");
+        }
+
+        int index = 0;
+        for (int i = 0; i < quads.Length / 4; i++)
+        {
+            string tmp = $"{i}\t{quads[index++]}\t{quads[index++]}\t{quads[index++]}\t{quads[index++]}";
+            if (i + 1 < strings.Count)
+            {
+                strings[i + 1] += tmp;
+            }
+            else strings.Add("\t\t\t\t" + tmp);
+        }
 
 
+        return string.Join("\n", strings);
+    }
 
+    public static string ExportMeshCSV(List<HalfEdge> mesh)
+    {
+        //VertexIndex   VertexPosX  VertexPosY  VertexPosZ  QuadIndex   QuadVertexIndex1    QuadVertexIndex2    QuadVertexIndex3    QuadVertexIndex4        List<string> strings = new List<string>();
+        List<string> strings = new List<string>();
+        strings.Add("HalfEdgeIndice\tSourcePosX\tSourcePosY\tSourcePosZ\tPrevEdgeIndice\tNextEdgeIndice\tTwinEdgeIndice\tFaceIndice");
+
+        for (int i = 0; i < mesh.Count; i++)
+        {
+            HalfEdge edge = mesh[i];
+            strings.Add($"{edge.index}\t{edge.sourceVertex.vertex.x}\t{edge.sourceVertex.vertex.y}\t{edge.sourceVertex.vertex.z}\t{edge.prevEdge.index}\t{edge.nextEdge.index}\t{edge.twinEdge.index}\t{edge.face.edge.index}");
+        }
+
+        return string.Join("\n", strings);
     }
 
 }

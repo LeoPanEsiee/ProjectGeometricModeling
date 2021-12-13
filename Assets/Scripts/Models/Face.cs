@@ -2,11 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using UnityEngine.UIElements;
-
 public class Face
 {
-    HalfEdge edge;
+    public HalfEdge edge;
+
+    public Face(HalfEdge edge)
+    {
+        this.edge = edge;
+    }
 
     public void GetFaceVerticesAndEdges(out List<Vertex> vertices, out List<HalfEdge> edges)
     {
