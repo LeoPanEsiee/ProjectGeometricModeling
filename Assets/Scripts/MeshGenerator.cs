@@ -66,7 +66,7 @@ public class MeshGenerator : MonoBehaviour
         return newMesh;
     }
 
-    Mesh CreateQuad(Vector3 size)
+    public Mesh CreateQuad(Vector3 size)
     {
         Mesh newMesh = new Mesh();
         newMesh.name = "quad";
