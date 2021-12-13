@@ -1,92 +1,81 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class PlaneManager : MonoBehaviour
 {
 
     //Go
     [SerializeField]
-    GameObject pt1;
+    GameObject goSegment1;
     [SerializeField]
-    GameObject pt2;
-
+    GameObject goSegment2;
+    [SerializeField]
+    GameObject goPoint;
     [SerializeField]
     GameObject goPlane;
+    [SerializeField]
+    GameObject goTextBox;
 
     //Math
-    Plane plan1;
-    Segment s1;
-
-    //bool touche = false;
-
-
+    Plane plane;
+    Segment segment;
+    Vector3 point;
 
     // Start is called before the first frame update
     void Start()
     {
-
-        Debug.DrawLine(pt1.transform.position, pt2.transform.position, Color.red, 100);
-
-        plan1 = new Plane(goPlane.transform.forward, Vector3.Dot(goPlane.transform.position, goPlane.transform.forward));
-        s1 = new Segment(pt1.transform.position, pt2.transform.position);
-
+        Debug.DrawLine(goSegment1.transform.position, goSegment2.transform.position, Color.red, 100);
+        segment = new Segment(goSegment1.transform.position, goSegment2.transform.position);
+        plane = new Plane(goPlane.transform.forward, Vector3.Dot(goPlane.transform.position, goPlane.transform.forward));
+        point = goPoint.transform.position;
     }
-    
+
 
     // Update is called once per frame
     void Update()
     {
-
-        goPlane.transform.Rotate(20f * Time.deltaTime,0,0, Space.Self);
-
-        plan1.normal = goPlane.transform.forward;
-        plan1.d = Vector3.Dot(goPlane.transform.position, plan1.normal);
-
-        //Debug.Log("Plan 1 : " + plan1.normal + " " + plan1.d);
+        goPlane.transform.Rotate(20f * Time.deltaTime, 0, 0, Space.Self);
+        plane.normal = goPlane.transform.forward;
+        plane.d = Vector3.Dot(goPlane.transform.position, plane.normal);
 
         GameObject newSphere;
 
         Vector3 interPt, interNormal;
-        if(InterSegmentPlane(s1, plan1, out interPt, out interNormal))
+        if (InterSegmentPlane(segment, plane, out interPt, out interNormal))
         {
-            //Debug.Log("CAAA FONCTIONNE");
-            //touche = true;
             newSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             newSphere.transform.position = interPt;
-            Destroy(newSphere,.1f);
+            Destroy(newSphere, .1f);
         }
-        /*
-        else
-        {
-            if (touche)
-            {
 
-                touche = false;
-                Debug.Log("NE TOUCHE PAS");
-            }
-        }
-        */
-
+        float distancePointPlane, distancePointSegment;
+        DistancePointPlane(point, plane, out distancePointPlane);
+        DistancePointSegment(segment, point, out distancePointSegment);
+        Text myText = goTextBox.GetComponent<Text>();
+        myText.text = "Distance point-plane : " + distancePointPlane + "\nDistance point-segment : " + distancePointSegment;
     }
 
     public bool InterSegmentPlane(Segment seg, Plane plane, out Vector3 interPt, out Vector3 interNormal)
     {
-        interPt = new Vector3(0,0,0);
+        interPt = new Vector3(0, 0, 0);
         interNormal = new Vector3(0, 0, 0);
         //Vector3 O = new Vector3(0, 0, 0);
         Vector3 AB = seg.pt2 - seg.pt1;
         float dotABn = Vector3.Dot(AB, plane.normal);
 
-        if (Mathf.Approximately(dotABn, 0)) { 
-            return false; 
+        if (Mathf.Approximately(dotABn, 0))
+        {
+            return false;
         }
 
         Vector3 OA = seg.pt1;
         float t = (plane.d - Vector3.Dot(OA, plane.normal)) / dotABn;
 
-        if (t < 0 || t > 1) { 
-            return false; 
+        if (t < 0 || t > 1)
+        {
+            return false;
         }
 
         interPt = seg.pt1 + t * AB;
@@ -94,5 +83,19 @@ public class PlaneManager : MonoBehaviour
         return true;
     }
 
+    public static float DistancePointSegment(Segment segment, Vector3 point, out float distance)
+    {
+        Vector3 u = segment.pt2 - segment.pt1;
+        Vector3 OP = point - segment.pt1;
+        distance = Vector3.Cross(u, OP).magnitude / u.magnitude;
+        return distance;
+    }
+
+    public static float DistancePointPlane(Vector3 point, Plane plane, out float distance)
+    {
+        Vector3 u = plane.normal;
+        distance = Mathf.Abs(u.x * point.x + u.y * point.y + u.z * point.z) / u.magnitude;
+        return distance;
+    }
 
 }
