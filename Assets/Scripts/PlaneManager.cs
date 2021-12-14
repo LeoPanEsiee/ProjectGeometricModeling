@@ -51,7 +51,8 @@ public class PlaneManager : MonoBehaviour
         }
 
         float distancePointPlane, distancePointSegment;
-        DistancePointPlane(point, plane, out distancePointPlane);
+        Vector3 planePoint = goPlane.transform.position;
+        DistancePointPlane(point, planePoint, plane, out distancePointPlane);
         DistancePointSegment(segment, point, out distancePointSegment);
         Text myText = goTextBox.GetComponent<Text>();
         myText.text = "Distance point-plane : " + distancePointPlane + "\nDistance point-segment : " + distancePointSegment;
@@ -91,10 +92,11 @@ public class PlaneManager : MonoBehaviour
         return distance;
     }
 
-    public static float DistancePointPlane(Vector3 point, Plane plane, out float distance)
+    public static float DistancePointPlane(Vector3 point, Vector3 planePoint, Plane plane, out float distance)
     {
         Vector3 u = plane.normal;
-        distance = Mathf.Abs(u.x * point.x + u.y * point.y + u.z * point.z) / u.magnitude;
+        float d = u.x * planePoint.x + u.y * planePoint.y + u.z * planePoint.z;
+        distance = Mathf.Abs(u.x * point.x + u.y * point.y + u.z * point.z + Mathf.Abs(d)) / u.magnitude;
         return distance;
     }
 
