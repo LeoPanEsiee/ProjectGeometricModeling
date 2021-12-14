@@ -20,6 +20,8 @@ public class PlaneManager : MonoBehaviour
 
     //bool touche = false;
 
+    [SerializeField]
+    bool activatePlane = false;
 
 
     // Start is called before the first frame update
@@ -38,23 +40,29 @@ public class PlaneManager : MonoBehaviour
     void Update()
     {
 
-        goPlane.transform.Rotate(20f * Time.deltaTime,0,0, Space.Self);
+        //goPlane.transform.Rotate(20f * Time.deltaTime,0,0, Space.Self);
 
-        plan1.normal = goPlane.transform.forward;
-        plan1.d = Vector3.Dot(goPlane.transform.position, plan1.normal);
-
-        //Debug.Log("Plan 1 : " + plan1.normal + " " + plan1.d);
-
-        GameObject newSphere;
-
-        Vector3 interPt, interNormal;
-        if(InterSegmentPlane(s1, plan1, out interPt, out interNormal))
+        Debug.Log(goPlane.activeSelf);
+        if (activatePlane)
         {
-            //Debug.Log("CAAA FONCTIONNE");
-            //touche = true;
-            newSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            newSphere.transform.position = interPt;
-            Destroy(newSphere,.1f);
+            goPlane.SetActive(true);
+
+            plan1.normal = goPlane.transform.forward;
+            plan1.d = Vector3.Dot(goPlane.transform.position, plan1.normal);
+
+            //Debug.Log("Plan 1 : " + plan1.normal + " " + plan1.d);
+
+            GameObject newSphere;
+
+            Vector3 interPt, interNormal;
+            if (InterSegmentPlane(s1, plan1, out interPt, out interNormal))
+            {
+                //Debug.Log("CAAA FONCTIONNE");
+                //touche = true;
+                newSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                newSphere.transform.position = interPt;
+                Destroy(newSphere, .1f);
+            }
         }
         /*
         else
