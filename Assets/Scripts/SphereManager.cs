@@ -19,6 +19,7 @@ public class SphereManager : MonoBehaviour
     Sphere sphere1;
     Segment s1;
 
+    GameObject newSphere;
 
     //bool touche = false;
 
@@ -43,6 +44,7 @@ public class SphereManager : MonoBehaviour
 
         if (InterSegmentSphere(s1, sphere1, out interPt1, out interPt2))
         {
+            Debug.Log("CAAA FONCTIONNE");
             createIntersectionSphere(interPt1);
             createIntersectionSphere(interPt2);
 
@@ -52,7 +54,6 @@ public class SphereManager : MonoBehaviour
 
     private void createIntersectionSphere(Vector3 position)
     {
-        GameObject newSphere;
         newSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         newSphere.transform.localScale = new Vector3(1, 1, 1);
         newSphere.transform.position = position;
@@ -90,6 +91,8 @@ public class SphereManager : MonoBehaviour
             interPt1 = seg.pt1 + x1 * AB;
             interPt2 = seg.pt1 + x2 * AB;
 
+            Debug.Log(interPt1);
+            Debug.Log(interPt2);
 
             return true;
 

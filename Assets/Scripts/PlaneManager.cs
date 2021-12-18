@@ -20,6 +20,7 @@ public class PlaneManager : MonoBehaviour
 
     //bool touche = false;
 
+    GameObject newSphere;
 
 
     // Start is called before the first frame update
@@ -45,7 +46,6 @@ public class PlaneManager : MonoBehaviour
 
         //Debug.Log("Plan 1 : " + plan1.normal + " " + plan1.d);
 
-        GameObject newSphere;
 
         Vector3 interPt, interNormal;
         if(InterSegmentPlane(s1, plan1, out interPt, out interNormal))
