@@ -17,7 +17,6 @@ public class CylinderManager : MonoBehaviour
 
 
 
-    float radius = .5f;
 
     //Math
     Cylinder cylinder1;
@@ -37,7 +36,7 @@ public class CylinderManager : MonoBehaviour
         s1 = new Segment(pt1.transform.position, pt2.transform.position);
         cylinder1 = new Cylinder(goCylinder.transform.position - goCylinder.transform.up * 2,
                                  goCylinder.transform.position + goCylinder.transform.up * 2,
-                                 radius);
+                                 .5f);
     }
 
     // Update is called once per frame
