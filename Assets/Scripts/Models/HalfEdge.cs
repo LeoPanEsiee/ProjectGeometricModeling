@@ -14,6 +14,17 @@ public class HalfEdge
     public HalfEdge twinEdge;
 
     public Face face;
+
+
+    public HalfEdge(Vertex sourceVertex, HalfEdge prevEdge, HalfEdge nextEdge, HalfEdge twinEdge, Face face)
+    {
+        this.sourceVertex = sourceVertex;
+        this.prevEdge = prevEdge;
+        this.nextEdge = nextEdge;
+        this.twinEdge = twinEdge;
+        this.face = face;
+    }
+
     public HalfEdge(int index, Vertex sourceVertex, HalfEdge prevEdge, HalfEdge nextEdge, HalfEdge twinEdge, Face face)
     {
         this.index = index;

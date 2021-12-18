@@ -51,7 +51,7 @@ public class MeshGenerator : MonoBehaviour
         // Polygone Regulier
         mMesh = CreateRegularPolygonXZQuads(5f, 9);
         m_Mf.sharedMesh = mMesh;
-        List<HalfEdge> cv = Toolbox.VertexFaceToHalfEdges(mMesh.vertices, mMesh.GetIndices(0));
+        //List<HalfEdge> cv = Toolbox.VertexFaceToHalfEdges(mMesh.vertices, mMesh.GetIndices(0));
 
 
         gameObject.AddComponent<MeshCollider>();

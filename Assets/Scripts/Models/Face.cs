@@ -4,10 +4,22 @@ using UnityEngine;
 
 public class Face
 {
+    public int index;
     public HalfEdge edge;
 
     public Face(HalfEdge edge)
     {
+        this.edge = edge;
+    }
+
+    public Face(int i)
+    {
+        this.index = i;
+    }
+
+    public Face(int index, HalfEdge edge)
+    {
+        this.index = index;
         this.edge = edge;
     }
 
