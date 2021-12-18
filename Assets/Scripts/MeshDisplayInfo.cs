@@ -102,19 +102,18 @@ public class MeshDisplayInfo : MonoBehaviour
             }
         }
     }
-
     public static string ExportMeshCSV(Mesh mesh)
     {
         List<string> strings = new List<string>();
-        strings.Add("VertexIndex\tVertexPositionX\tVertexPositionY\tVertexPositionZ\tQuadIndex\tQuadVertex1\tQuadVertex2\tQuadVertex3\tQuadVertex4");
-        
+        strings.Add("VertexIndex VertexPositionX VertexPositionY VertexPositionZ QuadIndex QuadVertex1 QuadVertex2 QuadVertex3 QuadVertex4");
+
         Vector3[] vertices = mesh.vertices;
         int[] quads = mesh.GetIndices(0);
 
         for (int i = 0; i < vertices.Length; i++)
         {
-            Vertex pos = new Vertex(vertices[i]);
-            strings.Add($"{i}\t{pos.vertex.x:N02}\t{pos.vertex.y:N02}\t{pos.vertex.z:N02}\t");
+            Vector3 pos = vertices[i];
+            strings.Add($"{i}\t{pos.x:N02}\t{pos.y:N02}\t{pos.z:N02}\t");
         }
 
         int index = 0;
@@ -128,21 +127,6 @@ public class MeshDisplayInfo : MonoBehaviour
             else strings.Add("\t\t\t\t" + tmp);
         }
 
-
-        return string.Join("\n", strings);
-    }
-
-    public static string ExportMeshCSV(List<HalfEdge> mesh)
-    {
-        //VertexIndex   VertexPosX  VertexPosY  VertexPosZ  QuadIndex   QuadVertexIndex1    QuadVertexIndex2    QuadVertexIndex3    QuadVertexIndex4        List<string> strings = new List<string>();
-        List<string> strings = new List<string>();
-        strings.Add("HalfEdgeIndice\tSourcePosX\tSourcePosY\tSourcePosZ\tPrevEdgeIndice\tNextEdgeIndice\tTwinEdgeIndice\tFaceIndice");
-
-        for (int i = 0; i < mesh.Count; i++)
-        {
-            HalfEdge edge = mesh[i];
-            strings.Add($"{edge.index}\t{edge.sourceVertex.vertex.x}\t{edge.sourceVertex.vertex.y}\t{edge.sourceVertex.vertex.z}\t{edge.prevEdge.index}\t{edge.nextEdge.index}\t{edge.twinEdge.index}\t{edge.face.edge.index}");
-        }
 
         return string.Join("\n", strings);
     }

@@ -5,7 +5,16 @@ using UnityEngine;
 
 public class Toolbox : MonoBehaviour
 {
-    MeshGenerator mg = new MeshGenerator();
+
+    delegate Vector3 ComputeVector3FromKxKz(float kX, float kZ);
+
+    [SerializeField]
+    MeshFilter cube_meshFilter;
+
+    [SerializeField]
+    bool activate = false;
+
+
 
     #region Vertice Manager
     public static List<HalfEdge> GetHalfEdges(Vertex vertice, List<HalfEdge> halfEdges)
@@ -95,7 +104,7 @@ public class Toolbox : MonoBehaviour
             quads[index++] = triangles[i++];
             quads[index++] = triangles[i++];
             i += 2;
-            quads[index++] = triangles[i++];
+            quads[index++] = triangles[i];
         }
 
         return quads;
@@ -145,58 +154,33 @@ public class Toolbox : MonoBehaviour
             e3.nextEdge = e4;
 
 
-            //On doit finalement créer les twin edges, aka les mêmes edges dans un sens contraire
-            HalfEdge t1 = new HalfEdge(index++, v2, null, null, e1, currentFace);
-            HalfEdge t2 = new HalfEdge(index++, v3, null, t1, e2, currentFace);
-            HalfEdge t3 = new HalfEdge(index++, v4, null, t2, e3, currentFace);
-            HalfEdge t4 = new HalfEdge(index++, v1, t1, t3, e4, currentFace);
-
-            // On les complète
-            t1.nextEdge = t4;
-
-            t1.prevEdge = t2;
-            t2.prevEdge = t3;
-            t3.prevEdge = t4;
-
-            // On complète nos halfEdges de base
-            e1.twinEdge = t1;
-            e2.twinEdge = t2;
-            e3.twinEdge = t3;
-            e4.twinEdge = t4;
-
             //Enfin, on ajoute tout à la liste des vertices
             halfEdges.Add(e1);
             halfEdges.Add(e2);
             halfEdges.Add(e3);
             halfEdges.Add(e4);
-            halfEdges.Add(t1);
-            halfEdges.Add(t2);
-            halfEdges.Add(t3);
-            halfEdges.Add(t4);
-
-            SetTwinEdges(halfEdges);
+            index += 4;
         }
+        SetTwinEdges(halfEdges);
         return list;
     }
 
-    public static Mesh HalfHedgesToVertexFace(List <HalfEdge> halfEdges)
+    public static Mesh HalfHedgesToVertexFace(List<HalfEdge> halfEdges, List<Face> faces, List<Vertex> vertices)
     {
         Mesh mesh = new Mesh();
-        List<Vector3> vertices = new List<Vector3>();
+        List<Vector3> tempVertices = vertices.ConvertAll(vertice => vertice.vertex);
         List<int> quads = new List<int>();
 
-        foreach(var halfEdge in halfEdges)
+        foreach(var face in faces)
         {
-            vertices.Add(halfEdge.sourceVertex.vertex);
-            quads.Add(halfEdge.face.edge.sourceVertex.index);
+            quads.Add(face.edge.sourceVertex.index);
 
-            // On ajoute aussi les 3 autres ou pas ?
-            quads.Add(halfEdge.face.edge.nextEdge.sourceVertex.index);
-            quads.Add(halfEdge.face.edge.nextEdge.nextEdge.sourceVertex.index);
-            quads.Add(halfEdge.face.edge.nextEdge.nextEdge.nextEdge.sourceVertex.index);
+            quads.Add(face.edge.nextEdge.sourceVertex.index);
+            quads.Add(face.edge.nextEdge.nextEdge.sourceVertex.index);
+            quads.Add(face.edge.nextEdge.nextEdge.nextEdge.sourceVertex.index);
         }
 
-        mesh.vertices = vertices.ToArray();
+        mesh.vertices = tempVertices.ToArray();
         mesh.SetIndices(quads, MeshTopology.Quads, 0);
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
@@ -228,14 +212,14 @@ public class Toolbox : MonoBehaviour
 
         if (halfEdge.twinEdge == null)
         {
-            return edgePoint / 2;
+            return new Vertex(edgePoint / 2);
         }
         else
         {
             edgePoint += FacePoints(halfEdge.face);
             edgePoint += FacePoints(halfEdge.twinEdge.face);
 
-            return edgePoint / 4;
+            return new Vertex(edgePoint / 4);
         }
     }
 
@@ -373,8 +357,10 @@ public class Toolbox : MonoBehaviour
         //  - Couper nos edges en 2 (l'ancienne edge sera connectée de la vertice actuelle au edgePoint et la nouvelle edge du edgePoint à la prochaine vertice)
         //  - Connecter les facePoints aux edgePoints
 
-        for(int i = 0; i < faces.Count; i++)
+        int facesSize = faces.Count;
+        for (int i = 0; i < facesSize; i++)
         {
+
             // On prend les 4 edges de la face
             HalfEdge halfEdge1 = faces[i].edge;
             HalfEdge halfEdge2 = faces[i].edge.nextEdge;
@@ -397,10 +383,13 @@ public class Toolbox : MonoBehaviour
             HalfEdge newHalfEdge3 = SplitEdge(halfEdge3, edgePoints[halfEdge3.index]);
             HalfEdge newHalfEdge4 = SplitEdge(halfEdge4, edgePoints[halfEdge4.index]);
 
+            /*
             newHalfEdge1.index = halfEdges.Count;
             newHalfEdge2.index = halfEdges.Count + 1;
             newHalfEdge3.index = halfEdges.Count + 2;
             newHalfEdge4.index = halfEdges.Count + 3;
+            */
+
 
             halfEdges.Add(newHalfEdge1);
             halfEdges.Add(newHalfEdge2);
@@ -424,12 +413,15 @@ public class Toolbox : MonoBehaviour
 
             // On connecte enfin le facePoint aux 4 autres edgePoints
             Vertex currentFacePoint = facePoints[faces[i].index];
+
             ConnectEdgePointToFacePoint(currentFacePoint, face1, newHalfEdge4, halfEdges);
             ConnectEdgePointToFacePoint(currentFacePoint, face2, newHalfEdge1, halfEdges);
             ConnectEdgePointToFacePoint(currentFacePoint, face3, newHalfEdge2, halfEdges);
             ConnectEdgePointToFacePoint(currentFacePoint, face4, newHalfEdge3, halfEdges);
 
+
         }
+
 
         SetTwinEdges(halfEdges);
     }
@@ -439,11 +431,174 @@ public class Toolbox : MonoBehaviour
         Mesh newMesh = mesh;
         for(int i = 0; i < subdivisionLevel; i++)
         {
+
             Tuple<List<HalfEdge>, List<Face>, List<Vertex>> halfEdges = VertexFaceToHalfEdges(newMesh);
             CatmullClarkSubdivision(halfEdges.Item1, halfEdges.Item2, halfEdges.Item3);
-            newMesh = HalfHedgesToVertexFace(halfEdges.Item1);
+            newMesh = HalfHedgesToVertexFace(halfEdges.Item1, halfEdges.Item2, halfEdges.Item3);
+
         }
+
         return newMesh;
     }
     #endregion
+
+
+
+    void Update()
+    {
+        if (activate)
+        {
+
+            activate = false;
+            cube_meshFilter.sharedMesh = Catmull_Clark(cube_meshFilter.sharedMesh);
+
+            Debug.Log(MeshDisplayInfo.ExportMeshCSV(cube_meshFilter.sharedMesh));
+            //cube_meshFilter.sharedMesh = CreateQuad(new Vector3(4,0,2));
+            //cube_meshFilter.sharedMesh = WrapNormalizedPlane(20, 10, (kX,kZ) => new Vector3( (kX-.5f)*8, 0, (kZ-.5f)*4 ));
+
+        }
+    }
+
+    private Mesh WrapNormalizedPlaneQuads(int nSegmentsX, int nSegmentsZ, ComputeVector3FromKxKz computePosition)
+    {
+        Mesh newMesh = new Mesh();
+        newMesh.name = "wrappedNormalizedPlaneQuads";
+
+
+        Vector3[] vertices = new Vector3[(nSegmentsX + 1) * (nSegmentsZ + 1)];
+        int[] quads = new int[nSegmentsX * nSegmentsZ * 4];
+
+        // VERTICES
+        int index = 0;
+        for (int i = 0; i < nSegmentsX + 1; i++)
+        {
+            float kX = (float)i / nSegmentsX;
+
+            for (int j = 0; j < nSegmentsZ + 1; j++)
+            {
+                float kZ = (float)j / nSegmentsZ;
+                vertices[index++] = computePosition(kX, kZ);
+            }
+        }
+
+        //Debug :
+        //for (int i = 0; i < vertices.Length; i++)
+        //{
+        //    Debug.Log(i + " : " + vertices[i]);
+        //}
+
+
+        //TRIANGLES
+        index = 0;
+        for (int i = 0; i < nSegmentsX; i++)
+        {
+            for (int j = 0; j < nSegmentsZ; j++)
+            {
+                quads[index++] = i * (nSegmentsZ + 1) + j;
+                quads[index++] = i * (nSegmentsZ + 1) + j + 1;
+                quads[index++] = (i + 1) * (nSegmentsZ + 1) + j + 1;
+                quads[index++] = (i + 1) * (nSegmentsZ + 1) + j;
+
+
+            }
+        }
+        for (int j = 0; j < nSegmentsZ; j++)
+        {
+            for (int i = 0; i < nSegmentsX; i++)
+            {
+                quads[index++] = i + j * (nSegmentsX + 1);
+                quads[index++] = i + 1 + j * (nSegmentsX + 1);
+                quads[index++] = i + nSegmentsX + 1 + j * (nSegmentsX + 1);
+            }
+        }
+
+
+        newMesh.vertices = vertices;
+
+        newMesh.triangles = quads;
+        newMesh.SetIndices(quads, MeshTopology.Quads, 0);
+        newMesh.RecalculateBounds();
+        newMesh.RecalculateNormals();
+        return newMesh;
+    }
+
+    public Mesh CreateQuad(Vector3 size)
+    {
+        Mesh newMesh = new Mesh();
+        newMesh.name = "quad";
+
+        Vector3 halfSize = size * .5f;
+
+        Vector3[] vertices = new Vector3[4];
+        int[] triangles = new int[2 * 3];
+
+        vertices[0] = new Vector3(-halfSize.x, 0, -halfSize.z);
+        vertices[1] = new Vector3(-halfSize.x, 0, halfSize.z);
+        vertices[2] = new Vector3(halfSize.x, 0, halfSize.z);
+        vertices[3] = new Vector3(halfSize.x, 0, -halfSize.z);
+
+        triangles[0] = 0;
+        triangles[1] = 1;
+        triangles[2] = 2;
+
+        triangles[3] = 0;
+        triangles[4] = 2;
+        triangles[5] = 3;
+
+        newMesh.vertices = vertices;
+        newMesh.triangles = triangles;
+        newMesh.RecalculateBounds();
+        return newMesh;
+    }
+
+    private Mesh WrapNormalizedPlane(int nSegmentsX, int nSegmentsZ, ComputeVector3FromKxKz computePosition)
+    {
+        Mesh newMesh = new Mesh();
+        newMesh.name = "wrappedNormalizedPlane";
+
+
+        Vector3[] vertices = new Vector3[(nSegmentsX + 1) * (nSegmentsZ + 1)];
+        int[] triangles = new int[nSegmentsX * nSegmentsZ * 3 * 2];
+
+        // VERTICES
+        int index = 0;
+        for (int i = 0; i < nSegmentsX + 1; i++)
+        {
+            float kX = (float)i / nSegmentsX;
+            for (int j = 0; j < nSegmentsZ + 1; j++)
+            {
+                float kZ = (float)j / nSegmentsZ;
+                vertices[index++] = computePosition(kX, kZ);
+            }
+        }
+
+        //Debug :
+        //for (int i = 0; i < vertices.Length; i++)
+        //{
+        //    Debug.Log(i + " : " + vertices[i]);
+        //}
+
+
+        //TRIANGLES
+        index = 0;
+        for (int j = 0; j < nSegmentsZ; j++)
+        {
+            for (int i = 0; i < nSegmentsX; i++)
+            {
+                triangles[index++] = i + j * (nSegmentsX + 1);
+                triangles[index++] = i + 1 + j * (nSegmentsX + 1);
+                triangles[index++] = i + nSegmentsX + 1 + j * (nSegmentsX + 1);
+
+                triangles[index++] = i + 1 + j * (nSegmentsX + 1);
+                triangles[index++] = i + nSegmentsX + 1 + 1 + j * (nSegmentsX + 1);
+                triangles[index++] = i + nSegmentsX + 1 + j * (nSegmentsX + 1);
+            }
+        }
+
+        newMesh.vertices = vertices;
+        newMesh.triangles = triangles;
+        newMesh.RecalculateBounds();
+        newMesh.RecalculateNormals();
+        return newMesh;
+    }
 }
