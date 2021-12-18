@@ -35,7 +35,7 @@ public class Toolbox : MonoBehaviour
 
     public static int Valence(Vertex vertice, List<HalfEdge> halfEdges)
     {
-        return GetFaces(vertice, halfEdges).Count;
+        return GetHalfEdges(vertice, halfEdges).Count;
     }
 
     #endregion
@@ -115,17 +115,17 @@ public class Toolbox : MonoBehaviour
             vertices.Add(new Vertex(i, mesh.vertices[i]));
         }
 
-        int[] facesIndex = TrianglesToQuads(mesh);
+        int[] quads = TrianglesToQuads(mesh);
 
         int index = 0;
-        for (int i = 0; i < facesIndex.Length / 4 ; i++)
+        for (int i = 0; i < quads.Length / 4 ; i++)
         {
-            // On part du principe qu'une face est égale à un quad, qui demande de généré 4 HalfEdges
+            // On part du principe qu'une face est égale à un quad, qui demande de générer 4 halfEdges
             
-            Vertex v1 = vertices[facesIndex[index]];
-            Vertex v2 = vertices[facesIndex[index + 1]];
-            Vertex v3 = vertices[facesIndex[index + 2]];
-            Vertex v4 = vertices[facesIndex[index + 3]];
+            Vertex v1 = vertices[quads[index]];
+            Vertex v2 = vertices[quads[index + 1]];
+            Vertex v3 = vertices[quads[index + 2]];
+            Vertex v4 = vertices[quads[index + 3]];
             
             HalfEdge e1 = new HalfEdge(index, v1, null, null, null, null);
             
@@ -174,6 +174,7 @@ public class Toolbox : MonoBehaviour
             halfEdges.Add(t3);
             halfEdges.Add(t4);
 
+            SetTwinEdges(halfEdges);
         }
         return list;
     }
@@ -188,6 +189,8 @@ public class Toolbox : MonoBehaviour
         {
             vertices.Add(halfEdge.sourceVertex.vertex);
             quads.Add(halfEdge.face.edge.sourceVertex.index);
+
+            // On ajoute aussi les 3 autres ou pas ?
             quads.Add(halfEdge.face.edge.nextEdge.sourceVertex.index);
             quads.Add(halfEdge.face.edge.nextEdge.nextEdge.sourceVertex.index);
             quads.Add(halfEdge.face.edge.nextEdge.nextEdge.nextEdge.sourceVertex.index);
@@ -242,18 +245,12 @@ public class Toolbox : MonoBehaviour
         List<HalfEdge> listHalfEdgesFromVertex = GetHalfEdges(vertice, halfEdges);
 
         // On crée une liste des faces adjacentes à notre vertice
-        List<Face> listFaces = new List<Face>();
-
-        for(int i = 0; i < listHalfEdgesFromVertex.Count; i++)
-        {
-            if (listHalfEdgesFromVertex[i].face != null)
-            {
-                listFaces.Add(listHalfEdgesFromVertex[i].face);
-            }
-        }
+        List<Face> listFaces = GetFaces(vertice,halfEdges);
 
         int n = Valence(vertice, halfEdges);
 
+
+        // A voir si 3 ou po
         if(n >= 3)
         {
 
@@ -267,12 +264,14 @@ public class Toolbox : MonoBehaviour
 
             Q /= listFaces.Count;
 
+
             // R : moyenne des Mid-Edge Points
 
             Vertex R = new Vertex();
             for (int i = 0; i < listHalfEdgesFromVertex.Count; i++)
             {
                 R += (listHalfEdgesFromVertex[i].sourceVertex + listHalfEdgesFromVertex[i].nextEdge.sourceVertex) / 2;
+                //R += (vertice + listHalfEdgesFromVertex[i].nextEdge.sourceVertex) / 2;
             }
 
             R /= listHalfEdgesFromVertex.Count;
@@ -361,6 +360,7 @@ public class Toolbox : MonoBehaviour
         }
 
         // De même pour les edgePoints
+        // Voir si on doit en sélectionner ou tous les traiter
         foreach(var halfEdge in halfEdges)
         {
             Vertex edgePoint = EdgePoints(halfEdge);
@@ -402,7 +402,6 @@ public class Toolbox : MonoBehaviour
             newHalfEdge3.index = halfEdges.Count + 2;
             newHalfEdge4.index = halfEdges.Count + 3;
 
-
             halfEdges.Add(newHalfEdge1);
             halfEdges.Add(newHalfEdge2);
             halfEdges.Add(newHalfEdge3);
@@ -429,7 +428,10 @@ public class Toolbox : MonoBehaviour
             ConnectEdgePointToFacePoint(currentFacePoint, face2, newHalfEdge1, halfEdges);
             ConnectEdgePointToFacePoint(currentFacePoint, face3, newHalfEdge2, halfEdges);
             ConnectEdgePointToFacePoint(currentFacePoint, face4, newHalfEdge3, halfEdges);
+
         }
+
+        SetTwinEdges(halfEdges);
     }
     
     public static Mesh Catmull_Clark(Mesh mesh, int subdivisionLevel = 1)
