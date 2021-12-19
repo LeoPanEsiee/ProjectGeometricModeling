@@ -27,7 +27,21 @@ public class GlobalManager : MonoBehaviour
 
 
     [SerializeField]
-    GameObject goTextBox;
+    GameObject goDistanceTextBox;
+
+
+    [SerializeField]
+    GameObject goTitleTextBox;
+
+
+    [SerializeField]
+    GameObject route1;
+    [SerializeField]
+    GameObject route2;
+
+
+    [SerializeField]
+    Button changeMode;
 
     [SerializeField]
     int form = 0;
@@ -54,7 +68,10 @@ public class GlobalManager : MonoBehaviour
     static bool cyl_intersec2 = false;
 
 
-    Text myText;
+    Text distanceText;
+    Text titleText;
+
+    
 
 
 
@@ -71,19 +88,26 @@ public class GlobalManager : MonoBehaviour
         cylinder1 = new Cylinder(goCylinder.transform.position - goCylinder.transform.up * 2,
                                  goCylinder.transform.position + goCylinder.transform.up * 2,
                                  .5f);
-        myText = goTextBox.GetComponent<Text>();
+        distanceText = goDistanceTextBox.GetComponent<Text>();
+        titleText = goTitleTextBox.GetComponent<Text>();
+        changeMode.onClick.AddListener(() => form++);
     }
 
     void Update()
     {
+
         switch (form)
         {
 
             case 1:
-                myText.text = "";
+                titleText.text = "Intersection Segment - Plan";
+                distanceText.text = "";
                 goPlane.SetActive(true);
                 goSphere.SetActive(false);
                 goCylinder.SetActive(false);
+                pointDistance.SetActive(false);
+                route1.SetActive(false);
+                route2.SetActive(false);
                 UpdatingPlane();
                 Vector3 intersectionPlan, interNormal;
                 if (InterSegmentPlane(seg1, plan1, out intersectionPlan, out interNormal))
@@ -92,10 +116,14 @@ public class GlobalManager : MonoBehaviour
                 }
                 break;
             case 2:
-                myText.text = "";
+                titleText.text = "Intersection Segment - Sphere";
+                distanceText.text = "";
                 goPlane.SetActive(false);
                 goSphere.SetActive(true);
                 goCylinder.SetActive(false);
+                pointDistance.SetActive(false);
+                route1.SetActive(true);
+                route2.SetActive(true);
                 UpdateSphere();
                 Vector3 intersectionSphere1, intersectionSphere2;
                 if (InterSegmentSphere(seg1, sphere1, out intersectionSphere1, out intersectionSphere2))
@@ -112,11 +140,14 @@ public class GlobalManager : MonoBehaviour
                 }
                 break;
             case 3:
-
-                myText.text = "";
+                titleText.text = "Intersection Segment - Cylindre";
+                distanceText.text = "";
                 goPlane.SetActive(false);
                 goSphere.SetActive(false);
                 goCylinder.SetActive(true);
+                pointDistance.SetActive(false);
+                route1.SetActive(false);
+                route2.SetActive(false);
                 UpdateCylinder();
                 Vector3 pointIntersecCylindre1, pointIntersecCylindre2;
                 if (InterSegmentCylinder(seg1, cylinder1, out pointIntersecCylindre1, out pointIntersecCylindre2, out interNormal))
@@ -135,19 +166,28 @@ public class GlobalManager : MonoBehaviour
                 break;
 
             case 4:
+                titleText.text = "Distance Segment & Plan - Point";
                 goPlane.SetActive(true);
                 goSphere.SetActive(false);
                 goCylinder.SetActive(false);
+                pointDistance.SetActive(true);
+                route1.SetActive(true);
+                route2.SetActive(true);
 
                 UpdateDistances();
                 UpdatingPlane(); 
                 break;
 
             default:
-                myText.text = "";
+                form = 0;
+                titleText.text = "Defaut";
+                distanceText.text = "";
                 goPlane.SetActive(false);
                 goSphere.SetActive(false);
                 goCylinder.SetActive(false);
+                pointDistance.SetActive(false);
+                route1.SetActive(false);
+                route2.SetActive(false);
                 break;
         }
     }
@@ -304,8 +344,8 @@ public class GlobalManager : MonoBehaviour
         DistancePointPlane(pointDistance.transform.position, planePoint, plan1, out distancePointPlane);
         DistancePointSegment(seg1, pointDistance.transform.position, out distancePointSegment);
 
-        
-        myText.text = "Distance point-plane : " + distancePointPlane.ToString("F2") + 
+
+        distanceText.text = "Distance point-plane : " + distancePointPlane.ToString("F2") + 
             "\nDistance point-segment : " + distancePointSegment.ToString("F2");
 
     }
@@ -316,7 +356,6 @@ public class GlobalManager : MonoBehaviour
         Vector3 OP = point - segment.pt1;
         distance = Vector3.Cross(u, OP).magnitude / u.magnitude;
 
-        Debug.DrawLine(u, OP, Color.blue, 100);
         return distance;
     }
 
