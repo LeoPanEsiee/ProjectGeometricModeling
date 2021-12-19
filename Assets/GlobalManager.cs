@@ -5,39 +5,34 @@ using UnityEngine.UI;
 
 public class GlobalManager : MonoBehaviour
 {
+    #region SerializeFields
+    //Segment
     [SerializeField]
     GameObject pt1;
     [SerializeField]
     GameObject pt2;
 
-
     [SerializeField]
     GameObject goPlane;
-
     [SerializeField]
     GameObject goSphere;
-
     [SerializeField]
     GameObject goCylinder;
-
-
 
     [SerializeField]
     GameObject pointDistance;
 
-
-    [SerializeField]
-    GameObject goDistanceTextBox;
-
-
-    [SerializeField]
-    GameObject goTitleTextBox;
-
-
+    //Bezier routes to follow
     [SerializeField]
     GameObject route1;
     [SerializeField]
     GameObject route2;
+
+
+    [SerializeField]
+    GameObject goDistanceTextBox;
+    [SerializeField]
+    GameObject goTitleTextBox;
 
 
     [SerializeField]
@@ -46,19 +41,21 @@ public class GlobalManager : MonoBehaviour
     [SerializeField]
     int form = 0;
 
+    #endregion
 
 
 
+
+    #region Math objects
     //Math
-    Segment seg1;
-    Plane plan1;
-    Sphere sphere1;
-    Cylinder cylinder1;
+    Segment mathSegment;
+    Plane mathPlane;
+    Sphere mathSphere;
+    Cylinder mathCylinder;
+    #endregion
 
 
-
-
-
+    #region Show interaction using a sphere
     GameObject newSphere;
 
     static bool sphere_intersec1 = false;
@@ -66,28 +63,29 @@ public class GlobalManager : MonoBehaviour
 
     static bool cyl_intersec1 = false;
     static bool cyl_intersec2 = false;
+    #endregion
 
 
+    #region Texts
     Text distanceText;
     Text titleText;
-
-    
+    #endregion
 
 
 
 
     void Start()
     {
-
         Debug.DrawLine(pt1.transform.position, pt2.transform.position, Color.red, 100);
 
-        seg1 = new Segment(pt1.transform.position, pt2.transform.position);
-        plan1 = new Plane(goPlane.transform.forward, Vector3.Dot(goPlane.transform.position, goPlane.transform.forward));
-        sphere1 = new Sphere(goSphere.transform.position, goSphere.transform.localScale.x);
+        mathSegment = new Segment(pt1.transform.position, pt2.transform.position);
+        mathPlane = new Plane(goPlane.transform.forward, Vector3.Dot(goPlane.transform.position, goPlane.transform.forward));
+        mathSphere = new Sphere(goSphere.transform.position, goSphere.transform.localScale.x);
 
-        cylinder1 = new Cylinder(goCylinder.transform.position - goCylinder.transform.up * 2,
+        mathCylinder = new Cylinder(goCylinder.transform.position - goCylinder.transform.up * 2,
                                  goCylinder.transform.position + goCylinder.transform.up * 2,
                                  .5f);
+
         distanceText = goDistanceTextBox.GetComponent<Text>();
         titleText = goTitleTextBox.GetComponent<Text>();
         changeMode.onClick.AddListener(() => form++);
@@ -95,22 +93,15 @@ public class GlobalManager : MonoBehaviour
 
     void Update()
     {
-
         switch (form)
         {
-
             case 1:
                 titleText.text = "Intersection Segment - Plan";
                 distanceText.text = "";
-                goPlane.SetActive(true);
-                goSphere.SetActive(false);
-                goCylinder.SetActive(false);
-                pointDistance.SetActive(false);
-                route1.SetActive(false);
-                route2.SetActive(false);
+                Activation(true, false, false, false, false);
                 UpdatingPlane();
                 Vector3 intersectionPlan, interNormal;
-                if (InterSegmentPlane(seg1, plan1, out intersectionPlan, out interNormal))
+                if (InterSegmentPlane(mathSegment, mathPlane, out intersectionPlan, out interNormal))
                 {
                     CreateIntersectionSphere(intersectionPlan, Color.red);
                 }
@@ -118,15 +109,10 @@ public class GlobalManager : MonoBehaviour
             case 2:
                 titleText.text = "Intersection Segment - Sphere";
                 distanceText.text = "";
-                goPlane.SetActive(false);
-                goSphere.SetActive(true);
-                goCylinder.SetActive(false);
-                pointDistance.SetActive(false);
-                route1.SetActive(true);
-                route2.SetActive(true);
+                Activation(false, true, false, false, true);
                 UpdateSphere();
                 Vector3 intersectionSphere1, intersectionSphere2;
-                if (InterSegmentSphere(seg1, sphere1, out intersectionSphere1, out intersectionSphere2))
+                if (InterSegmentSphere(mathSegment, mathSphere, out intersectionSphere1, out intersectionSphere2))
                 {
                     if (sphere_intersec1)
                     {
@@ -142,15 +128,10 @@ public class GlobalManager : MonoBehaviour
             case 3:
                 titleText.text = "Intersection Segment - Cylindre";
                 distanceText.text = "";
-                goPlane.SetActive(false);
-                goSphere.SetActive(false);
-                goCylinder.SetActive(true);
-                pointDistance.SetActive(false);
-                route1.SetActive(false);
-                route2.SetActive(false);
+                Activation(false, false, true, false, false);
                 UpdateCylinder();
                 Vector3 pointIntersecCylindre1, pointIntersecCylindre2;
-                if (InterSegmentCylinder(seg1, cylinder1, out pointIntersecCylindre1, out pointIntersecCylindre2, out interNormal))
+                if (InterSegmentCylinder(mathSegment, mathCylinder, out pointIntersecCylindre1, out pointIntersecCylindre2, out interNormal))
                 {
                     if (cyl_intersec1)
                     {
@@ -167,13 +148,7 @@ public class GlobalManager : MonoBehaviour
 
             case 4:
                 titleText.text = "Distance Segment & Plan - Point";
-                goPlane.SetActive(true);
-                goSphere.SetActive(false);
-                goCylinder.SetActive(false);
-                pointDistance.SetActive(true);
-                route1.SetActive(true);
-                route2.SetActive(true);
-
+                Activation(true, false, false, true, true);
                 UpdateDistances();
                 UpdatingPlane(); 
                 break;
@@ -182,14 +157,19 @@ public class GlobalManager : MonoBehaviour
                 form = 0;
                 titleText.text = "Defaut";
                 distanceText.text = "";
-                goPlane.SetActive(false);
-                goSphere.SetActive(false);
-                goCylinder.SetActive(false);
-                pointDistance.SetActive(false);
-                route1.SetActive(false);
-                route2.SetActive(false);
+                Activation(false, false, false, false, false);
                 break;
         }
+    }
+
+    private void Activation(bool plane, bool sphere, bool cylinder, bool distance, bool route)
+    {
+        goPlane.SetActive(plane);
+        goSphere.SetActive(sphere);
+        goCylinder.SetActive(cylinder);
+        pointDistance.SetActive(distance);
+        route1.SetActive(route);
+        route2.SetActive(route);
     }
 
     private void CreateIntersectionSphere(Vector3 position, Color c)
@@ -201,27 +181,30 @@ public class GlobalManager : MonoBehaviour
         Destroy(newSphere, .05f);
     }
 
+    #region Update GameObjects
     private void UpdatingPlane()
     {
         goPlane.transform.Rotate(20f * Time.deltaTime, 0, 0, Space.Self);
-        plan1.normal = goPlane.transform.forward;
-        plan1.d = Vector3.Dot(goPlane.transform.position, plan1.normal);
+        mathPlane.normal = goPlane.transform.forward;
+        mathPlane.d = Vector3.Dot(goPlane.transform.position, mathPlane.normal);
     }
 
     private void UpdateSphere()
     {
-        sphere1.center = goSphere.transform.position;
-        sphere1.radius = goSphere.transform.localScale.x;
+        mathSphere.center = goSphere.transform.position;
+        mathSphere.radius = goSphere.transform.localScale.x;
     }
 
     private void UpdateCylinder()
     {
         goCylinder.transform.Rotate(20f * Time.deltaTime, 0, 0, Space.Self);
 
-        cylinder1.pt1 = goCylinder.transform.position - goCylinder.transform.up * 2;
-        cylinder1.pt2 = goCylinder.transform.position + goCylinder.transform.up * 2;
+        mathCylinder.pt1 = goCylinder.transform.position - goCylinder.transform.up * 2;
+        mathCylinder.pt2 = goCylinder.transform.position + goCylinder.transform.up * 2;
     }
+    #endregion
 
+    #region GameObjects Intersection
     public bool InterSegmentPlane(Segment seg, Plane plane, out Vector3 interPt, out Vector3 interNormal)
     {
         interPt = new Vector3(0, 0, 0);
@@ -289,6 +272,7 @@ public class GlobalManager : MonoBehaviour
 
 
     }
+    
     public static bool InterSegmentCylinder(Segment segment, Cylinder cylinder, out Vector3 interPt1, out Vector3 interPt2, out Vector3 interNormal)
     {
         interPt1 = new Vector3(0, 0, 0);
@@ -335,14 +319,16 @@ public class GlobalManager : MonoBehaviour
 
         return false;
     }
+    #endregion
 
+    #region Distances
     private void UpdateDistances()
     {
 
         float distancePointPlane, distancePointSegment;
         Vector3 planePoint = goPlane.transform.position;
-        DistancePointPlane(pointDistance.transform.position, planePoint, plan1, out distancePointPlane);
-        DistancePointSegment(seg1, pointDistance.transform.position, out distancePointSegment);
+        DistancePointPlane(pointDistance.transform.position, planePoint, mathPlane, out distancePointPlane);
+        DistancePointSegment(mathSegment, pointDistance.transform.position, out distancePointSegment);
 
 
         distanceText.text = "Distance point-plane : " + distancePointPlane.ToString("F2") + 
@@ -366,4 +352,6 @@ public class GlobalManager : MonoBehaviour
         distance = Mathf.Abs(u.x * point.x + u.y * point.y + u.z * point.z + Mathf.Abs(d)) / u.magnitude;
         return distance;
     }
+
+    #endregion
 }

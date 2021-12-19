@@ -44,7 +44,6 @@ public class RouteFollow : MonoBehaviour
 
     private IEnumerator GoByTheRoute(int routeNum)
     {
-        Debug.Log("Starting Coroutine");
         coroutineAllowed = false;
 
         Vector2 p0 = routes[routeNum].GetChild(0).position;
@@ -70,6 +69,5 @@ public class RouteFollow : MonoBehaviour
         }
 
         coroutineAllowed = true;
-        Debug.Log("Ending Coroutine");
     }
 }
