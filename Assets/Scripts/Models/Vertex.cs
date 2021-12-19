@@ -17,6 +17,13 @@ public class Vertex
     {
         this.vertex = v.vertex;
     }
+
+    public Vertex(int index, Vertex v)
+    {
+        this.index = index;
+        this.vertex = v.vertex;
+    }
+
     public Vertex(int index, Vector3 vertex)
     {
         this.index = index;

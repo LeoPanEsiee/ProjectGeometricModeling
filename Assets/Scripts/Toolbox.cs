@@ -61,7 +61,8 @@ public class Toolbox : MonoBehaviour
             }
             else
             {
-                foreach(var face in GetFaces(halfEdge.sourceVertex, halfEdges))
+                List<Face> faces = GetFaces(halfEdge.sourceVertex, halfEdges);
+                foreach(var face in faces)
                 {
                     HalfEdge twinEdge = face.edge;
                     for(int i = 0; i < 4; i++)
@@ -116,8 +117,6 @@ public class Toolbox : MonoBehaviour
         List<Face> faces = new List<Face>();
         List<Vertex> vertices = new List<Vertex>();
 
-        var list = new Tuple<List<HalfEdge>, List<Face>, List<Vertex>>(halfEdges, faces, vertices);
-
         //On gère la liste des vertices
         for(int i = 0; i < mesh.vertices.Length; i++)
         {
@@ -162,10 +161,13 @@ public class Toolbox : MonoBehaviour
             index += 4;
         }
         SetTwinEdges(halfEdges);
+
+        var list = new Tuple<List<HalfEdge>, List<Face>, List<Vertex>>(halfEdges, faces, vertices);
+
         return list;
     }
 
-    public static Mesh HalfHedgesToVertexFace(List<HalfEdge> halfEdges, List<Face> faces, List<Vertex> vertices)
+    public static Mesh HalfEdgesToVertexFace(List<HalfEdge> halfEdges, List<Face> faces, List<Vertex> vertices)
     {
         Mesh mesh = new Mesh();
         List<Vector3> tempVertices = vertices.ConvertAll(vertice => vertice.vertex);
@@ -174,7 +176,6 @@ public class Toolbox : MonoBehaviour
         foreach(var face in faces)
         {
             quads.Add(face.edge.sourceVertex.index);
-
             quads.Add(face.edge.nextEdge.sourceVertex.index);
             quads.Add(face.edge.nextEdge.nextEdge.sourceVertex.index);
             quads.Add(face.edge.nextEdge.nextEdge.nextEdge.sourceVertex.index);
@@ -201,7 +202,7 @@ public class Toolbox : MonoBehaviour
             res += currentHedge.sourceVertex;
         }
 
-        return res / 4;
+        return new Vertex(res / 4);
 
     }
 
@@ -254,13 +255,13 @@ public class Toolbox : MonoBehaviour
             Vertex R = new Vertex();
             for (int i = 0; i < listHalfEdgesFromVertex.Count; i++)
             {
-                R += (listHalfEdgesFromVertex[i].sourceVertex + listHalfEdgesFromVertex[i].nextEdge.sourceVertex) / 2;
-                //R += (vertice + listHalfEdgesFromVertex[i].nextEdge.sourceVertex) / 2;
+                //R += (listHalfEdgesFromVertex[i].sourceVertex + listHalfEdgesFromVertex[i].nextEdge.sourceVertex) / 2;
+                R += (vertice + listHalfEdgesFromVertex[i].nextEdge.sourceVertex) / 2;
             }
 
             R /= listHalfEdgesFromVertex.Count;
 
-            return (Q + 2 * R + (n - 3) * vertice) / n;
+            return new Vertex(vertice.index, (Q + 2 * R + (n - 3) * vertice) / n);
         }
         else
         {
@@ -339,6 +340,7 @@ public class Toolbox : MonoBehaviour
         foreach(var face in faces)
         {
             Vertex facePoint = FacePoints(face);
+            facePoint.index = vertices.Count;
             facePoints.Add(facePoint);
             vertices.Add(facePoint);
         }
@@ -348,6 +350,7 @@ public class Toolbox : MonoBehaviour
         foreach(var halfEdge in halfEdges)
         {
             Vertex edgePoint = EdgePoints(halfEdge);
+            edgePoint.index = vertices.Count;
             edgePoints.Add(edgePoint);
             vertices.Add(edgePoint);
         }
@@ -369,9 +372,9 @@ public class Toolbox : MonoBehaviour
 
             // Créations des faces
             Face face1 = faces[i];
-            Face face2 = new Face(faces.Count + 1);
-            Face face3 = new Face(faces.Count + 2);
-            Face face4 = new Face(faces.Count + 3);
+            Face face2 = new Face(faces.Count);
+            Face face3 = new Face(faces.Count + 1);
+            Face face4 = new Face(faces.Count + 2);
 
             faces.Add(face2);
             faces.Add(face3);
@@ -434,7 +437,7 @@ public class Toolbox : MonoBehaviour
 
             Tuple<List<HalfEdge>, List<Face>, List<Vertex>> halfEdges = VertexFaceToHalfEdges(newMesh);
             CatmullClarkSubdivision(halfEdges.Item1, halfEdges.Item2, halfEdges.Item3);
-            newMesh = HalfHedgesToVertexFace(halfEdges.Item1, halfEdges.Item2, halfEdges.Item3);
+            newMesh = HalfEdgesToVertexFace(halfEdges.Item1, halfEdges.Item2, halfEdges.Item3);
 
         }
 
@@ -450,7 +453,7 @@ public class Toolbox : MonoBehaviour
         {
 
             activate = false;
-            cube_meshFilter.sharedMesh = Catmull_Clark(cube_meshFilter.sharedMesh);
+            cube_meshFilter.sharedMesh = Catmull_Clark(cube_meshFilter.sharedMesh, 1);
 
             Debug.Log(MeshDisplayInfo.ExportMeshCSV(cube_meshFilter.sharedMesh));
             //cube_meshFilter.sharedMesh = CreateQuad(new Vector3(4,0,2));
